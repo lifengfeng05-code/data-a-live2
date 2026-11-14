@@ -79,7 +79,7 @@
  				error = EACCES;
 --- a/bsd/kern/sweet_execswap.h
 +++ b/bsd/kern/sweet_execswap.h
-@@ -0,0 +1,40 @@
+@@ -0,0 +1,39 @@
 +/* Diagnostic exec path substitution, compiled only for SWEET boards.
 + * Caller serializes initialization/log quota; returned strings live for boot.
 + * Reject truncation, lists, relative paths, whitespace and ambiguous syntax.
@@ -115,7 +115,6 @@
 +	}
 +	/* PANDORA: the data-protection helper has to become the stub as well. */
 +	if (strcmp(base, "seputil") == 0 || strcmp(base, "init_data_protection") == 0) {
-+		printf("SWEET EXECSWAP: matched %s -> /usr/libexec/mountstub\n", base);
 +		return "/usr/libexec/mountstub";
 +	}
 +	return NULL;
