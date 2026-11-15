@@ -1,7 +1,7 @@
 diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
 --- a/iokit/Kernel/IOUserClient.cpp
 +++ b/iokit/Kernel/IOUserClient.cpp
-@@ -6885,26 +6885,6 @@
+@@ -6890,13 +6890,8 @@
  	(void)dispatch;
  	(void)target;
  	(void)reference;
