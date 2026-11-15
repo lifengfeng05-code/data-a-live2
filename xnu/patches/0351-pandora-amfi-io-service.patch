@@ -1,19 +1,18 @@
 diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
 --- a/iokit/Kernel/IOUserClient.cpp
 +++ b/iokit/Kernel/IOUserClient.cpp
-@@ -6714,4 +6714,111 @@
+@@ -6714,4 +6714,115 @@
  OSMetaClassDefineReservedUnused(IOUserClient2022, 0);
  OSMetaClassDefineReservedUnused(IOUserClient2022, 1);
  OSMetaClassDefineReservedUnused(IOUserClient2022, 2);
  OSMetaClassDefineReservedUnused(IOUserClient2022, 3);
-+
 +/* PANDORA: publish a minimal AppleMobileFileIntegrity IOKit service.
 + *
 + * The built-in sweet AMFI only implements the MACF callbacks. launchd_cache_loader (and
-+ * later amfid) also open AMFI's user client to verify launchd.plist.sig; without the
-+ * service they abort with "Unable to find AMFI", and launchd then exits with
-+ * "No service cache". This stub accepts every request: the caller only needs the
-+ * verification to succeed so that it goes on and writes its own cache. */
++ * amfid) also open AMFI's user client to verify launchd.plist.sig; without the service
++ * they abort with "Unable to find AMFI" and launchd then exits with "No service cache".
++ * This stub accepts every request, so the caller's verification succeeds and it goes on
++ * to write its own cache. */
 +
 +#include <IOKit/IOPlatformExpert.h>
 +
@@ -95,21 +94,26 @@ diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
 +static void
 +sweet_amfi_service_startup(void)
 +{
-+	IOPlatformExpert *platform = IOService::getPlatform();
++	printf("SWEET AMFI: IOKit service startup\n");
 +
-+	if (platform == NULL) {
++	IORegistryEntry *parent = IOService::getPlatform();
++	if (parent == NULL) {
++		parent = IORegistryEntry::getRegistryRoot();
++	}
++	if (parent == NULL) {
++		printf("SWEET AMFI: no registry root, service not published\n");
 +		return;
 +	}
++
 +	SweetAmfiService *service = new SweetAmfiService;
 +	if (service == NULL) {
 +		return;
 +	}
-+	if (!service->init()) {
-+		service->release();
-+		return;
++	if (service->init() && service->attach(parent)) {
++		service->registerService();
++		printf("SWEET AMFI: AppleMobileFileIntegrity IOKit service published\n");
++	} else {
++		printf("SWEET AMFI: service attach failed\n");
 +	}
-+	service->attach(platform);
-+	service->registerService();
-+	printf("SWEET AMFI: AppleMobileFileIntegrity IOKit service published\n");
 +}
 +STARTUP(ZALLOC, STARTUP_RANK_LAST, sweet_amfi_service_startup);
