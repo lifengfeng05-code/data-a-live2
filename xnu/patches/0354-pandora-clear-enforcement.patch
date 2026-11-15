@@ -1,0 +1,15 @@
+diff --git a/bsd/kern/kern_exec.c b/bsd/kern/kern_exec.c
+--- a/bsd/kern/kern_exec.c
++++ b/bsd/kern/kern_exec.c
+@@ -7546,6 +7546,12 @@
+ 	 * CodeDirectory, so boot tasks report their real com.apple.* identity.
+ 	 */
+ 	imgp->ip_csflags |= CS_VALID;
++	/* PANDORA: we never compute real per-page hashes, so enforcement must be off;
++	 * otherwise kern_cs.c panics with "CS PAGE FAIL" the first time such a page is
++	 * faulted in. Seen with launchd_cache_loader right after it verified the boot
++	 * plist through our AMFI stub. */
++	imgp->ip_csflags &= ~(CS_ENFORCEMENT | CS_KILL | CS_HARD | CS_REQUIRE_LV);
+ 	return 0;
+ 
+ 	mach_port_t port = IPC_PORT_NULL;
