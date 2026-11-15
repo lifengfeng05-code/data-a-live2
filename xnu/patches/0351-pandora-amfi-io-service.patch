@@ -1,0 +1,113 @@
+diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
+--- a/iokit/Kernel/IOUserClient.cpp
++++ b/iokit/Kernel/IOUserClient.cpp
+@@ -6714,3 +6714,110 @@
+ OSMetaClassDefineReservedUnused(IOUserClient2022, 0);
+ OSMetaClassDefineReservedUnused(IOUserClient2022, 1);
+ OSMetaClassDefineReservedUnused(IOUserClient2022, 2);
+ OSMetaClassDefineReservedUnused(IOUserClient2022, 3);
++
++/* PANDORA: publish a minimal AppleMobileFileIntegrity IOKit service.
++ *
++ * The built-in sweet AMFI only implements the MACF callbacks. launchd_cache_loader (and
++ * later amfid) also open AMFI's user client to verify launchd.plist.sig; without the
++ * service they abort with "Unable to find AMFI", and launchd then exits with
++ * "No service cache". This stub accepts every request: the caller only needs the
++ * verification to succeed so that it goes on and writes its own cache. */
++
++class SweetAmfiService;
++
++class SweetAmfiClient : public IOUserClient
++{
++	OSDeclareDefaultStructors(SweetAmfiClient);
++
++public:
++	virtual IOReturn externalMethod(uint32_t selector, IOExternalMethodArguments *args,
++	    IOExternalMethodDispatch *dispatch, OSObject *target, void *reference) APPLE_KEXT_OVERRIDE;
++};
++
++class SweetAmfiService : public IOService
++{
++	OSDeclareDefaultStructors(SweetAmfiService);
++
++public:
++	virtual bool start(IOService *provider) APPLE_KEXT_OVERRIDE;
++	virtual IOReturn newUserClient(task_t owningTask, void *securityID, UInt32 type,
++	    OSDictionary *properties, IOUserClient **handler) APPLE_KEXT_OVERRIDE;
++};
++
++OSDefineMetaClassAndStructors(SweetAmfiClient, IOUserClient);
++OSDefineMetaClassAndStructors(SweetAmfiService, IOService);
++
++IOReturn
++SweetAmfiClient::externalMethod(uint32_t selector, IOExternalMethodArguments *args,
++    IOExternalMethodDispatch *dispatch, OSObject *target, void *reference)
++{
++	(void)selector;
++	(void)dispatch;
++	(void)target;
++	(void)reference;
++
++	if (args != NULL) {
++		for (uint32_t i = 0; i < args->scalarOutputCount; i++) {
++			args->scalarOutput[i] = 0;
++		}
++	}
++	return kIOReturnSuccess;
++}
++
++bool
++SweetAmfiService::start(IOService *provider)
++{
++	if (!super::start(provider)) {
++		return false;
++	}
++	registerService();
++	return true;
++}
++
++IOReturn
++SweetAmfiService::newUserClient(task_t owningTask, void *securityID, UInt32 type,
++    OSDictionary *properties, IOUserClient **handler)
++{
++	(void)owningTask;
++	(void)securityID;
++	(void)type;
++	(void)properties;
++
++	SweetAmfiClient *client = new SweetAmfiClient;
++
++	if (client == NULL) {
++		return kIOReturnNoMemory;
++	}
++	if (!client->init() || !client->attach(this) || !client->start(this)) {
++		client->detach(this);
++		client->release();
++		return kIOReturnError;
++	}
++	*handler = client;
++	return kIOReturnSuccess;
++}
++
++__startup_func
++static void
++sweet_amfi_service_startup(void)
++{
++	IOService *platform = IOService::getPlatform();
++
++	if (platform == NULL) {
++		return;
++	}
++	SweetAmfiService *service = new SweetAmfiService;
++	if (service == NULL) {
++		return;
++	}
++	if (!service->init()) {
++		service->release();
++		return;
++	}
++	service->attach(platform);
++	service->registerService();
++	printf("SWEET AMFI: AppleMobileFileIntegrity IOKit service published\n");
++}
++STARTUP(ZALLOC, STARTUP_RANK_LAST, sweet_amfi_service_startup);
