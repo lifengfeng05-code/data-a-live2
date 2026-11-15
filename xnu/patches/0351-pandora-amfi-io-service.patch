@@ -1,7 +1,7 @@
 diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
 --- a/iokit/Kernel/IOUserClient.cpp
 +++ b/iokit/Kernel/IOUserClient.cpp
-@@ -6714,4 +6714,115 @@
+@@ -6714,4 +6714,112 @@
  OSMetaClassDefineReservedUnused(IOUserClient2022, 0);
  OSMetaClassDefineReservedUnused(IOUserClient2022, 1);
  OSMetaClassDefineReservedUnused(IOUserClient2022, 2);
@@ -96,12 +96,9 @@ diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
 +{
 +	printf("SWEET AMFI: IOKit service startup\n");
 +
-+	IORegistryEntry *parent = IOService::getPlatform();
-+	if (parent == NULL) {
-+		parent = IORegistryEntry::getRegistryRoot();
-+	}
-+	if (parent == NULL) {
-+		printf("SWEET AMFI: no registry root, service not published\n");
++	IOService *platform = (IOService *) IOService::getPlatform();
++	if (platform == NULL) {
++		printf("SWEET AMFI: no platform expert, service not published\n");
 +		return;
 +	}
 +
@@ -109,7 +106,7 @@ diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
 +	if (service == NULL) {
 +		return;
 +	}
-+	if (service->init() && service->attach(parent)) {
++	if (service->init() && service->attach(platform)) {
 +		service->registerService();
 +		printf("SWEET AMFI: AppleMobileFileIntegrity IOKit service published\n");
 +	} else {
