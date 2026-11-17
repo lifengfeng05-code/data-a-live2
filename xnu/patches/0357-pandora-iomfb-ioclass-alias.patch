@@ -1,0 +1,19 @@
+diff --git a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp
+@@ -1200,8 +1200,15 @@
+ 	setProperty(kIOUserClientClassKey, "IOMobileFramebufferUserClient");
+ 	setProperty("external", false);
+ 	setProperty("DisplayPipePlaneBaseAlignment", 64ULL, 32);
++	/* PANDORA: IOMobileFramebuffer.framework looks the display up with
++	 * IOServiceMatching("IOMobileFramebuffer"), which compares the IOClass
++	 * property against the string. Our instance is AppleCLCD (that is the class
++	 * the /arm-io/disp0 nub matches in the device tree), so the framework never
++	 * saw a framebuffer and backboardd left the panel black. Publish the alias
++	 * name here; the device tree match already happened in attach. */
++	setProperty("IOClass", "IOMobileFramebuffer");
+ 	registerService();
+ 	IOLog("SWEET FB: AppleCLCD %ux%u stride %u at 0x%llx, default surface %u\n",
+ 	    fWidth, fHeight, fRowBytes, fPhys, fSurface->id);
+ 	return true;
+ 
