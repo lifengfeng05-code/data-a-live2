@@ -1,0 +1,31 @@
+diff --git a/bsd/kern/kern_exec.c b/bsd/kern/kern_exec.c
+--- a/bsd/kern/kern_exec.c
++++ b/bsd/kern/kern_exec.c
+@@ -7491,9 +7491,27 @@
+ 		error = exec_add_user_string(imgp, CAST_USER_ADDR_T(pandora_oslog), UIO_SYSSPACE, FALSE);
+ 		if (error) {
+ 			goto bad;
+ 		}
+ 		imgp->ip_applec++;
+ 	}
++	/*
++	 * PANDORA: the two knobs libsystem actually looks at when it decides whether to copy
++	 * os_log traffic to stderr. OS_ACTIVITY_DT_MODE alone was not enough to make
++	 * backboardd's "StartWindowServer: ..." messages show up on the serial console.
++	 */
++	{
++		static const char pandora_oslog_stderr[] = "OS_LOG_STDERR=1";
++		static const char pandora_oslog_mode[] = "OS_ACTIVITY_MODE=debug";
++
++		error = exec_add_user_string(imgp, CAST_USER_ADDR_T(pandora_oslog_stderr), UIO_SYSSPACE, FALSE);
++		if (error == 0) {
++			imgp->ip_applec++;
++			error = exec_add_user_string(imgp, CAST_USER_ADDR_T(pandora_oslog_mode), UIO_SYSSPACE, FALSE);
++			if (error == 0) {
++				imgp->ip_applec++;
++			}
++		}
++	}
+ 	/* adding the pfz string */
+ 	{
+ 		char pfz_string[strlen(PFZ_KEY) + HEX_STR_LEN + 1];
