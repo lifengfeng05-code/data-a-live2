@@ -1,0 +1,30 @@
+diff --git a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp
+@@ -1090,6 +1090,7 @@
+ public:
+ 	OSDeclareDefaultStructors(AppleCLCD);
+ 
++	virtual bool matchProperty(IOService *client, OSData *value) APPLE_KEXT_OVERRIDE;
+ 	IOWorkLoop         *fWorkLoop;
+ 	IOTimerEventSource *fVsync;
+ 	SWEET_SURFACE      *fSurface;
+@@ -1118,6 +1118,18 @@
+ OSDefineMetaClassAndStructors(AppleCLCD, IOMobileFramebuffer);
+ 
+ bool
++AppleCLCD::matchProperty(IOService *client, OSData *value)
++{
++	/* PANDORA: somebody is probing the display service. backboardd opens the panel with
++	 * IOServiceMatching("AppleH1CLCD") (see 1000462ac in /usr/libexec/backboardd) and we
++	 * never saw that lookup, so record every probe here. */
++	const char *name = client != NULL ? client->getName() : "?";
++
++	IOLog("SWEET FB: matchProperty from %s\n", name);
++	return super::matchProperty(client, value);
++}
++
++bool
+ AppleCLCD::start(IOService *provider)
+ {
+ 	PE_Video video;
