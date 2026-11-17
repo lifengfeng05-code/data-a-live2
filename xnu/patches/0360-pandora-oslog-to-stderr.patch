@@ -1,0 +1,26 @@
+diff --git a/bsd/kern/kern_exec.c b/bsd/kern/kern_exec.c
+--- a/bsd/kern/kern_exec.c
++++ b/bsd/kern/kern_exec.c
+@@ -7481,7 +7481,22 @@
+ 	ipc_port_t sright;
+ 	uint64_t local_experiment_factors = 0;
+ 	/* exec_save_path stored the first string */
+ 	imgp->ip_applec = 1;
++	/*
++	 * PANDORA: mirror os_log to stderr. libsystem copies os_log traffic to stderr while
++	 * OS_ACTIVITY_DT_MODE is set, and every service's stderr already reaches the serial
++	 * console (that is where the "|backboardd| objc[55]: ..." lines come from). Without it
++	 * the reasons backboardd and SpringBoard give for not bringing up the UI only land in
++	 * os_log, where a port without a working logd view cannot read them.
++	 */
++	{
++		static const char pandora_oslog[] = "OS_ACTIVITY_DT_MODE=1";
++		error = exec_add_user_string(imgp, CAST_USER_ADDR_T(pandora_oslog), UIO_SYSSPACE, FALSE);
++		if (error) {
++			goto bad;
++		}
++		imgp->ip_applec++;
++	}
+ 	/* adding the pfz string */
+ 	{
+ 		char pfz_string[strlen(PFZ_KEY) + HEX_STR_LEN + 1];
