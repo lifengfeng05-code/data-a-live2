@@ -1,0 +1,16 @@
+diff --git a/iokit/Kernel/IOUserClient.cpp b/iokit/Kernel/IOUserClient.cpp
+--- a/iokit/Kernel/IOUserClient.cpp
++++ b/iokit/Kernel/IOUserClient.cpp
+@@ -6958,10 +6958,11 @@
+ 	AppleMobileFileIntegrityUserClient *client = new AppleMobileFileIntegrityUserClient;
+ 
+ 	if (client == NULL) {
+ 		return kIOReturnNoMemory;
+ 	}
+-	if (!client->init() || !client->attach(this) || !client->start(this)) {
++	if (!client->initWithTask(owningTask, securityID, type, properties) ||
++	    !client->attach(this) || !client->start(this)) {
+ 		client->detach(this);
+ 		client->release();
+ 		return kIOReturnError;
+ 	}
