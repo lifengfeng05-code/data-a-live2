@@ -1,0 +1,19 @@
+diff --git a/iokit/Kernel/IOPlatformExpert.cpp b/iokit/Kernel/IOPlatformExpert.cpp
+--- a/iokit/Kernel/IOPlatformExpert.cpp
++++ b/iokit/Kernel/IOPlatformExpert.cpp
+@@ -300,8 +300,15 @@
+ 	ctx = vfs_context_create(NULL);
+ 	if (ctx == NULL) {
+ 		printf("PANDORA SKIP: no vfs context\n");
+ 		thread_terminate(current_thread());
+ 	}
++	/*
++	 * PANDORA: this thread starts from IOPlatformExpert::start(), long before vfs_init()
++	 * runs. Touching a vnode that early takes a lock in a context where sleeping is not
++	 * allowed yet and panics (lock_rw.c:1377, "Taking non-sleepable RW lock"), so let the
++	 * BSD layer come up before the first probe.
++	 */
++	sweet_fb_sleep(5000);
+ 
+ 	for (i = 0; i < SWEET_FB_POLL_MAX; i++) {
+ 		if (sweet_fb_exists("/private/var/mobile", ctx) == 0) {
