@@ -1,0 +1,32 @@
+diff --git a/iokit/KernelConfigTables.cpp b/iokit/KernelConfigTables.cpp
+--- a/iokit/KernelConfigTables.cpp
++++ b/iokit/KernelConfigTables.cpp
+@@ -60,5 +60,5 @@
+     "   },"
+     "   {"
+-    "     'IOClass'         = AppleCLCD;"
++    "     'IOClass'         = AppleH1CLCD;"
+     "     'IOProviderClass' = IOPlatformDevice;"
+     "     'IONameMatch'     = 'sweet,display';"
+diff --git a/iokit/Kernel/arm/SweetFramebuffer.cpp b/iokit/Kernel/arm/SweetFramebuffer.cpp
+--- a/iokit/Kernel/arm/SweetFramebuffer.cpp
++++ b/iokit/Kernel/arm/SweetFramebuffer.cpp
+@@ -1120,6 +1120,18 @@
+ };
+ 
+ OSDefineMetaClassAndStructors(AppleCLCD, IOMobileFramebuffer);
++
++/* PANDORA: backboardd opens the panel with IOServiceMatching("AppleH1CLCD") and
++ * "AppleM2CLCD" (see 1000462ac in /usr/libexec/backboardd). IOServiceMatching compares
++ * with metaCast() on the service class, so the instance has to really be of that class -
++ * an IOClass property override is not enough. This subclass is what the device tree
++ * personality below instantiates. */
++class AppleH1CLCD : public AppleCLCD
++{
++	OSDeclareDefaultStructors(AppleH1CLCD);
++};
++
++OSDefineMetaClassAndStructors(AppleH1CLCD, AppleCLCD);
+ 
+ class IOMobileFramebufferUserClient : public IOUserClient {
+ 	OSDeclareDefaultStructors(IOMobileFramebufferUserClient);
