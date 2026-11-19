@@ -1,0 +1,8 @@
+diff --git a/osfmk/arm/pandora_prof.c b/osfmk/arm/pandora_prof.c
+--- a/osfmk/arm/pandora_prof.c
++++ b/osfmk/arm/pandora_prof.c
+@@ -520,3 +520,3 @@
+ 		uint64_t pc = 0, lr = 0, fp = 0, sp = 0;
+-		if (thread_getstatus(th, THREAD_STATE64, (thread_state_t)&pst, &pst_count) == KERN_SUCCESS) {
++		if (thread_getstatus(th, ARM_THREAD_STATE64, (thread_state_t)&pst, &pst_count) == KERN_SUCCESS) {
+ 			pc = arm_thread_state64_get_pc(pst);
