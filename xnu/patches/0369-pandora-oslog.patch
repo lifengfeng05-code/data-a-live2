@@ -1,0 +1,28 @@
+diff --git a/bsd/kern/kern_exec.c b/bsd/kern/kern_exec.c
+--- a/bsd/kern/kern_exec.c
++++ b/bsd/kern/kern_exec.c
+@@ -6100,4 +6100,24 @@
+ 	imgp->ip_applec = 1;
++	/*
++	 * PANDORA: mirror os_log to stderr. libsystem copies os_log traffic to stderr while these
++	 * variables are set, and every service's stderr already reaches the serial console (that
++	 * is where the "|backboardd| objc[55]: ..." lines come from). Without it the reasons
++	 * backboardd and SpringBoard give for never opening the display only land in os_log.
++	 */
++	{
++		static const char pandora_oslog_dt[] = "OS_ACTIVITY_DT_MODE=1";
++		static const char pandora_oslog_err[] = "OS_LOG_STDERR=1";
++		static const char pandora_oslog_mode[] = "OS_ACTIVITY_MODE=debug";
++		const char *const vars[] = { pandora_oslog_dt, pandora_oslog_err, pandora_oslog_mode };
++
++		for (int v = 0; v < 3; v++) {
++			error = exec_add_user_string(imgp, CAST_USER_ADDR_T(vars[v]), UIO_SYSSPACE, FALSE);
++			if (error) {
++				goto bad;
++			}
++			imgp->ip_applec++;
++		}
++	}
+ 
+ 	/* adding the pfz string */
+ 	{
