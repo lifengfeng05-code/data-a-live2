@@ -1,0 +1,65 @@
+diff --git a/iokit/Kernel/IOPlatformExpert.cpp b/iokit/Kernel/IOPlatformExpert.cpp
+--- a/iokit/Kernel/IOPlatformExpert.cpp
++++ b/iokit/Kernel/IOPlatformExpert.cpp
+@@ -378,3 +378,61 @@
+ 	printf("PANDORA SKIP: done, %d dirs, %d files, %d failed\n", dirs, files, failed);
++	/*
++	 * PANDORA: dump the first part of the dyld shared cache. The stack sampler prints raw
++	 * addresses inside the cache and the cache on disk is decmpfs compressed, but VFS reads
++	 * go through the decompressor, so vn_rdwr yields the real image table (the path and the
++	 * address range of every framework). 32 MiB covers the header and that table.
++	 */
++	{
++		extern "C" void *kalloc(vm_size_t);
++		extern "C" void kfree(void *, vm_size_t);
++		static const char pandora_cache_src[] =
++		    "/System/Library/Caches/com.apple.dyld/dyld_shared_cache_arm64";
++		static const char pandora_cache_dst[] = "/System/Library/xpc/dyldcache-head.bin";
++		vnode_t vin = NULLVP, vout = NULLVP;
++		int error = vnode_open(pandora_cache_src, FREAD, 0, 0, &vin, ctx);
++
++		if (error) {
++			printf("PANDORA SKIP: cache open failed %d\n", error);
++		} else {
++			char *buf = (char *)kalloc(1u << 20);
++
++			if (buf == NULL) {
++				printf("PANDORA SKIP: no buffer for the cache dump\n");
++			} else if (vnode_open(pandora_cache_dst, FWRITE | O_CREAT | O_TRUNC, 0644, 0,
++			    &vout, ctx) != 0) {
++				printf("PANDORA SKIP: cannot create %s\n", pandora_cache_dst);
++			} else {
++				off_t rd = 0, wr = 0;
++				int total = 0, got = 0, resid = 0;
++
++				while (total < (32 << 20)) {
++					got = 0;
++					error = vn_rdwr(UIO_READ, vin, buf, 1 << 20, rd, UIO_SYSSPACE,
++					    IO_NOCACHE | IO_NODELOCKED | IO_UNIT, vfs_context_ucred(ctx),
++					    &got, vfs_context_proc(ctx));
++					if (error || got <= 0) {
++						break;
++					}
++					resid = 0;
++					error = vn_rdwr(UIO_WRITE, vout, buf, got, wr, UIO_SYSSPACE,
++					    IO_NOCACHE | IO_NODELOCKED | IO_UNIT, vfs_context_ucred(ctx),
++					    &resid, vfs_context_proc(ctx));
++					if (error) {
++						break;
++					}
++					rd += got;
++					wr += got;
++					total += got;
++				}
++				vnode_close(vout, FWRITE, ctx);
++				printf("PANDORA SKIP: dyld cache head dumped, %d bytes (error %d)\n",
++				    total, error);
++			}
++			if (buf != NULL) {
++				kfree(buf, 1u << 20);
++			}
++			vnode_close(vin, FREAD, ctx);
++		}
++	}
+ out:
+ 	vfs_context_rele(ctx);
