@@ -1,0 +1,30 @@
+diff --git a/iokit/Kernel/IOPlatformExpert.cpp b/iokit/Kernel/IOPlatformExpert.cpp
+--- a/iokit/Kernel/IOPlatformExpert.cpp
++++ b/iokit/Kernel/IOPlatformExpert.cpp
+@@ -383,8 +383,6 @@
+ 	 * address range of every framework). 32 MiB covers the header and that table.
+ 	 */
+ 	{
+-		extern "C" void *kalloc(vm_size_t);
+-		extern "C" void kfree(void *, vm_size_t);
+ 		static const char pandora_cache_src[] =
+ 		    "/System/Library/Caches/com.apple.dyld/dyld_shared_cache_arm64";
+ 		static const char pandora_cache_dst[] = "/System/Library/xpc/dyldcache-head.bin";
+@@ -394,7 +392,8 @@
+ 		if (error) {
+ 			printf("PANDORA SKIP: cache open failed %d\n", error);
+ 		} else {
+-			char *buf = (char *)kalloc(1u << 20);
++			static char pandora_cache_buf[1u << 20];
++			char *buf = pandora_cache_buf;
+ 
+ 			if (buf == NULL) {
+ 				printf("PANDORA SKIP: no buffer for the cache dump\n");
+@@ -429,7 +428,6 @@
+ 				    total, error);
+ 			}
+ 			if (buf != NULL) {
+-				kfree(buf, 1u << 20);
+ 			}
+ 			vnode_close(vin, FREAD, ctx);
+ 		}
