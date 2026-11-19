@@ -1,0 +1,32 @@
+diff --git a/osfmk/arm/pandora_prof.c b/osfmk/arm/pandora_prof.c
+--- a/osfmk/arm/pandora_prof.c
++++ b/osfmk/arm/pandora_prof.c
+@@ -508,12 +508,21 @@
+ 	for (unsigned i = 0; i < count; i++) {
+ 		th = pstacks_threads[i];
+-		const arm_saved_state_t *u = get_user_regs(th);
+-		uint64_t pc = 0, lr = 0, fp = 0;
+-		if (u != NULL && is_saved_state64(u)) {
+-			pc = get_saved_state_pc(u);
+-			lr = get_saved_state_lr(u);
+-			fp = get_saved_state_fp(u);
+-		}
++		/*
++		 * PATCH 0372: get_user_regs() only holds a user state when the thread was switched
++		 * out with one saved; a thread parked in mach_msg_trap reports a stale value shared
++		 * with other processes (backboardd and SpringBoard printed identical pcs).
++		 * thread_getstatus() returns the state that was saved on the kernel entry of this
++		 * very thread, which is what we want to symbolise.
++		 */
++		arm_thread_state64_t pst;
++		mach_msg_type_number_t pst_count = ARM_THREAD_STATE64_COUNT;
++		uint64_t pc = 0, lr = 0, fp = 0, sp = 0;
++		if (thread_getstatus(th, THREAD_STATE64, (thread_state_t)&pst, &pst_count) == KERN_SUCCESS) {
++			pc = arm_thread_state64_get_pc(pst);
++			lr = arm_thread_state64_get_lr(pst);
++			fp = arm_thread_state64_get_fp(pst);
++			sp = arm_thread_state64_get_sp(pst);
++		}
+ 		/* 0317: the returns go 8 to a line ("... tid T +D |", D the depth of the first), so the console's line
+ 		 * length (about 256 characters, post3) no longer cuts the deeper frames, the app's own. */
+ 		char line[256];
