@@ -1,0 +1,8 @@
+diff --git a/osfmk/arm/pandora_prof.c b/osfmk/arm/pandora_prof.c
+--- a/osfmk/arm/pandora_prof.c
++++ b/osfmk/arm/pandora_prof.c
+@@ -30,3 +30,4 @@
+ #include <kern/kalloc.h>
++#include <mach/arm/thread_status.h>
+ #include <arm/cpu_data_internal.h>
+ #include <arm/machine_routines.h>
