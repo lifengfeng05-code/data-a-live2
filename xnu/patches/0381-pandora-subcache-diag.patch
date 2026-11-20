@@ -1,0 +1,20 @@
+diff --git a/iokit/Kernel/IOPlatformExpert.cpp b/iokit/Kernel/IOPlatformExpert.cpp
+--- a/iokit/Kernel/IOPlatformExpert.cpp
++++ b/iokit/Kernel/IOPlatformExpert.cpp
+@@ -450,8 +450,15 @@
+ 				vnode_t vin = NULLVP;
+ 				int got = 0, resid = 0, error;
+ 
++				int oerr;
++
+ 				snprintf(spath, sizeof(spath), sub_head, n);
+-				if (vnode_open(spath, FREAD, 0, 0, &vin, ctx) != 0) {
++				oerr = vnode_open(spath, FREAD, 0, 0, &vin, ctx);
++				if (oerr != 0) {
++					/* PATCH 0381: say why. */
++					if (n <= 2) {
++						printf("PANDORA SKIP: open %s failed %d\n", spath, oerr);
++					}
+ 					continue;
+ 				}
+ 				error = vn_rdwr(UIO_READ, vin, sub_buf, sizeof(sub_buf), 0, UIO_SYSSPACE,
