@@ -1,0 +1,18 @@
+diff --git a/osfmk/arm/pandora_prof.c b/osfmk/arm/pandora_prof.c
+--- a/osfmk/arm/pandora_prof.c
++++ b/osfmk/arm/pandora_prof.c
+@@ -519,10 +519,10 @@
+ 		mach_msg_type_number_t pst_count = ARM_THREAD_STATE64_COUNT;
+ 		uint64_t pc = 0, lr = 0, fp = 0, sp = 0;
+ 		if (thread_getstatus(th, ARM_THREAD_STATE64, (thread_state_t)&pst, &pst_count) == KERN_SUCCESS) {
+-			pc = pst.__pc;
+-			lr = pst.__lr;
+-			fp = pst.__fp;
+-			sp = pst.__sp;
++			pc = pst.pc;
++			lr = pst.lr;
++			fp = pst.fp;
++			sp = pst.sp;
+ 		}
+ 		/* 0317: the returns go 8 to a line ("... tid T +D |", D the depth of the first), so the console's line
+ 		 * length (about 256 characters, post3) no longer cuts the deeper frames, the app's own. */
