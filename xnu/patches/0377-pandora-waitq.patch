@@ -1,0 +1,17 @@
+diff --git a/iokit/Kernel/IOService.cpp b/iokit/Kernel/IOService.cpp
+--- a/iokit/Kernel/IOService.cpp
++++ b/iokit/Kernel/IOService.cpp
+@@ -5535,3 +5535,13 @@
+ {
++	{
++		/* PATCH 0377: who waits for whom. The stack sampler shows backboardd parked inside
++		 * IOKit on mach_msg while SpringBoard waits for its reply, and waitQuiet is the one
++		 * IOKit entry that blocks that way. */
++		char pn[64];
++		char cn[64];
++		proc_name(current_proc(), pn, sizeof(pn));
++		snprintf(cn, sizeof(cn), "%s", getMetaClass()->getClassName());
++		printf("PANDORA WAITQ: %s waits on %s\n", pn, cn);
++	}
+ 	IOReturn ret;
+ 	uint32_t loops, timeoutExtensions;
