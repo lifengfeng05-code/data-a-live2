@@ -1,0 +1,17 @@
+diff --git a/bsd/kern/sweet_execswap.h b/bsd/kern/sweet_execswap.h
+--- a/bsd/kern/sweet_execswap.h
++++ b/bsd/kern/sweet_execswap.h
+@@ -33,7 +33,13 @@
+ 	}
+ 	/* PANDORA: the data-protection helper has to become the stub as well. */
+ 	if (strcmp(base, "seputil") == 0 || strcmp(base, "init_data_protection") == 0) {
+ 		return "/usr/libexec/mountstub";
+ 	}
++	/* PATCH 0385: backboardd waits for the Bluetooth RemoteHID service (EXPERIENCE.md:42) and
++	 * never times out on this kernel. bluetoothd has nothing to talk to here, so let it be the
++	 * stub: the lookup fails fast and backboardd goes on to the window server. */
++	if (strcmp(base, "bluetoothd") == 0) {
++		return "/usr/libexec/mountstub";
++	}
+ 	return NULL;
+ }
