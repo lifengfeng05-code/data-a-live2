@@ -1,0 +1,15 @@
+diff --git a/iokit/Kernel/IOPlatformExpert.cpp b/iokit/Kernel/IOPlatformExpert.cpp
+--- a/iokit/Kernel/IOPlatformExpert.cpp
++++ b/iokit/Kernel/IOPlatformExpert.cpp
+@@ -466,6 +466,11 @@
+ 				    vfs_context_proc(ctx));
+ 				vnode_close(vin, FREAD, ctx);
+ 				if (error || got <= 0) {
++					/* PATCH 0382 */
++					if (n <= 2) {
++						printf("PANDORA SKIP: read %s -> error %d got %d\n",
++						    spath, error, got);
++					}
+ 					continue;
+ 				}
+ 				error = vn_rdwr(UIO_WRITE, vout, sub_buf, got, wr, UIO_SYSSPACE,
