@@ -1,0 +1,14 @@
+diff --git a/iokit/Kernel/arm/hid/IOHIDEventServiceUserClient.cpp b/iokit/Kernel/arm/hid/IOHIDEventServiceUserClient.cpp
+--- a/iokit/Kernel/arm/hid/IOHIDEventServiceUserClient.cpp
++++ b/iokit/Kernel/arm/hid/IOHIDEventServiceUserClient.cpp
+@@ -200,7 +200,10 @@
+     ExternalMethodGatedArguments gatedArguments = {selector, args};
+     IOReturn result;
+ 
++    /* PATCH 0383: who calls what, and whether it comes back. */
++    printf("PANDORA HIDUC: sel %u enter\n", selector);
+     result = _commandGate->runAction(OSMemberFunctionCast(IOCommandGate::Action, this, &IOHIDEventServiceUserClient::externalMethodGated), &gatedArguments);
++    printf("PANDORA HIDUC: sel %u -> %d\n", selector, result);
+ 
+     return result;
+ }
